@@ -1,0 +1,45 @@
+spring:
+  h2.console.enabled: true
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        generate_statistics: false
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        temp:
+          use_jdbc_metadata_defaults: false
+    show-sql: false
+    generate-ddl: true
+
+
+logging:
+  level:
+    org:
+      springframework:
+        security: info
+        web: info
+      hibernate:
+        type: info
+    root: info
+
+# Authentication properties used by JWT generation
+jwt:
+  pass-phrase: HvA is the best school ever. Nothing comes even close.
+  issuer: HvA
+
+email:
+  sender: ${INFO_TEST_EMAIL:test}
+  username: ${INFO_TEST_EMAIL:test}
+  password: ${INFO_TEST_PASSWORD:test}
+
+payment.secrets:
+  api-key: ${STRIPE_TEST_API_KEY:test}
+  webhook-secret: ${STRIPE_TEST_WEBHOOK_SECRET:test}

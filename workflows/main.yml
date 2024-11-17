@@ -1,0 +1,4 @@
+include:
+  - local: 'workflows/static-code-analysis.yml'
+  - local: 'workflows/deploy-prod.yml'
+  - local: 'workflows/deploy-acc.yml'

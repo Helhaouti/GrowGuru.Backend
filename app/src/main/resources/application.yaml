@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: ${APP_PROFILE:dev}
+  banner:
+    location: classpath:/banner.txt
+
+server:
+  port: ${SERVER_PORT:8080}

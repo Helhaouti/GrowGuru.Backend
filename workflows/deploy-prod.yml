@@ -1,0 +1,43 @@
+variables:
+  IMAGE_ID_PROD: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}-be-prod
+
+prod-package:
+  stage: package
+  environment:
+    name: production
+    url: https://prod.yaeldevries.nl/
+  tags:
+    - hva
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+  image: docker:latest
+  script:
+    - >
+      docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+      
+      docker build --build-arg "APP_PROFILE_ARG=prod" --build-arg "SERVER_PORT_ARG=8080" -t ${IMAGE_ID_PROD} -f Dockerfile .
+      
+      docker push ${IMAGE_ID_PROD}
+
+prod-deploy:
+  stage: deploy
+  environment:
+    name: production
+    url: https://prod.yaeldevries.nl/
+  tags:
+    - hva
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+  image: alpine:latest
+  before_script:
+    - 'command -v sshpass >/dev/null || ( apk add --update openssh sshpass )'
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $SSH_HOST_URL >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - sshpass -p "$SSH_PASSWORD" ssh $SSH_OPTIONS $SSH_USER@$SSH_HOST_URL "
+      echo $SSH_PASSWORD | sudo -S docker stop clover-prod-be || true &&
+      echo $SSH_PASSWORD | sudo -S docker rm clover-prod-be || true &&
+      echo $SSH_PASSWORD | sudo -S docker image prune -a -f &&
+      echo $SSH_PASSWORD | sudo -S docker run --name clover-prod-be --network=host -d --env-file /home/GrowGuruAdmin/environment/prod/clover-be.env --restart unless-stopped ${IMAGE_ID_PROD}"

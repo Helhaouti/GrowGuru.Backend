@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: ${JDBC_MYSQL_ACC}
+    username: ${JDBC_MYSQL_ACC_USERNAME}
+    password: ${JDBC_MYSQL_ACC_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        generate_statistics: false
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        temp:
+          use_jdbc_metadata_defaults: false
+    show-sql: false
+    generate-ddl: true
+  devtools:
+    add-properties: false
+
+server:
+  forward-headers-strategy: framework
+
+# Show logs only on info level
+logging:
+  level:
+    org:
+      springframework:
+        security: info
+        web: info
+      hibernate.type: info
+    root: info
+
+# Authentication properties used by JWT generation
+jwt:
+  pass-phrase: ${JWT_ACC_PASS_PHRASE}
+  issuer: ${JWT_ACC_ISSUER}
+
+email:
+  sender: ${INFO_ACC_EMAIL}
+  username: ${INFO_ACC_EMAIL}
+  password: ${INFO_ACC_PASSWORD}
+
+payment.secrets:
+  api-key: ${STRIPE_ACC_API_KEY}
+  webhook-secret: ${STRIPE_ACC_WEBHOOK_SECRET}

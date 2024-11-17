@@ -1,0 +1,289 @@
+@startuml
+scale 1.0
+hide circle
+skinparam {
+classAttributeIconSize 0
+monochrome true
+shadowing false
+linetype ortho
+}
+class nl.growguru.app.models.shop.Subscription {
+}
+interface nl.growguru.app.repositories.GrowGuruRepository {
+~ Optional<GrowGuru> findByUsername(String)
+~ Optional<GrowGuru> findByEmail(String)
+~ List<GrowGuru> findAllMembersInSpace(Space)
+}
+class nl.growguru.app.GrowGuruApplication {
++ {static} void main(String[])
+}
+class nl.growguru.app.exceptions.ResourceNotFound {
+}
+class nl.growguru.app.api.rest.AuthenticateController {
++ {static} String AUTH_API_BASE
+- AuthenticationManager authManager
+- GrowGuruService growGuruService
+- JWTUtil jwtUtil
++ ResponseEntity<GrowGuru> login(GrowGuru.LoginDto)
++ ResponseEntity<GrowGuru> register(GrowGuru.RegisterDto)
+}
+class nl.growguru.app.api.rest.PlantController {
+- PlantService plantService
+- SpaceService spaceService
++ ResponseEntity<Plant> getPlantDetails(UUID)
++ ResponseEntity<Plant> addPlants(Plant.PlantDto,UUID)
++ ResponseEntity<Plant> moveToGraveyard(UUID,UUID)
++ ResponseEntity<List<Plant>> getAllPlantsFromSpace(UUID)
+}
+class nl.growguru.app.services.PlantService {
+- PlantRepository plantRepository
+- SpaceRepository spaceRepository
+- SpaceService spaceService
+- {static} String PLANT_NOT_FOUND
++ Plant getPlantDetails(UUID)
++ Plant addPlant(Plant.PlantDto,UUID)
++ Plant moveToGraveyard(UUID,UUID)
+}
+class nl.growguru.app.models.shop.product.Product {
+- UUID id
+- String name
+- LocalDate dateAdded
+- Taxonomy taxonomy
+- byte[] image
+- double price
+- HashMap<String,HashMap<String,String>> specs
+}
+class nl.growguru.app.exceptions.PreConditionFailed {
+}
+abstract class nl.growguru.app.models.notifications.Notification {
+# String message
+}
+class nl.growguru.app.config.SecurityConfig {
+- PasswordEncoder passwordEncoder
+- GrowGuruService growGuruService
+- JWTFilter tokenFilter
+- String activeProfile
++ SecurityFilterChain securityFilterChain(HttpSecurity)
++ AuthenticationManager authenticationManagerBean()
+}
+enum nl.growguru.app.models.plantspaces.PlantState {
++  ALIVE
++  DEAD
+}
+class nl.growguru.app.config.GenericConfig {
++ {static} String EMAIL_REGEX
++ {static} String PASSWORD_REGEX
+- String frontendHostname
+- String backendHostname
+- String tzdbId
++ ZoneId getDefaultZoneId()
+}
+class nl.growguru.app.config.GlobalExceptionHandler {
+- {static} Logger logger
++ ResponseEntity<ErrorResponse> handleConflictException(Exception,HttpServletRequest)
++ ResponseEntity<ErrorResponse> handlePreconditionError(Exception,HttpServletRequest)
++ ResponseEntity<ErrorResponse> handleForbiddenResourceAccess(Exception,HttpServletRequest)
++ ResponseEntity<ErrorResponse> handleNotFound(Exception,HttpServletRequest)
++ ResponseEntity<ErrorResponse> handleUnauthorizedAcces(Exception,HttpServletRequest)
++ ResponseEntity<ErrorResponse> handleBadRequest(Exception,HttpServletRequest)
++ ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException)
++ ResponseEntity<ErrorResponse> handleInternalServerError(Exception,HttpServletRequest)
+- ResponseEntity<ErrorResponse> buildErrorResponse(HttpServletRequest,HttpStatus,Throwable)
+- String getRequestURL(HttpServletRequest)
+}
+class nl.growguru.app.config.GlobalExceptionHandler$ErrorResponse {
+- String code
+- String message
++ String message()
++ String code()
+}
+class nl.growguru.app.models.auth.GrowGuru {
+- UUID id
+- String username
+- String email
+- byte[] picture
+- String password
+- String verificationCode
+- LocalDateTime createdAt
+- LocalDateTime changedAt
+- List<Space> spaces
+- long currency
+- long experience
+- List<String> ownedAccessories
+- GrowGurePremium premium
++ Collection<? extends GrantedAuthority> getAuthorities()
++ boolean isAccountNonExpired()
++ boolean isAccountNonLocked()
++ boolean isCredentialsNonExpired()
++ boolean isEnabled()
+}
+class nl.growguru.app.models.auth.GrowGuru$LoginDto {
+~ String username
+~ String password
++ UsernamePasswordAuthenticationToken toAuthToken()
+}
+class nl.growguru.app.models.auth.GrowGuru$RegisterDto {
+- String email
++ GrowGuru toGrowGuru(PasswordEncoder)
+}
+class nl.growguru.app.models.auth.GrowGuru$UpdateDto {
+- String email
+- String password
+- String username
+- MultipartFile picture
+}
+class nl.growguru.app.models.shop.product.Taxonomy {
+- UUID id
+- int level
+- String name
+- Taxonomy parent
+- List<Taxonomy> children
+}
+class nl.growguru.app.api.rest.GrowGuruController {
+- GrowGuruService growGuruService
++ GrowGuru getGrowGuru()
++ List<GrowGuru> getAllGrowGurusInSpace(Space)
++ GrowGuru findById(UUID)
++ GrowGuru findByEmail(String)
++ GrowGuru findByUsername(String)
++ GrowGuru updateGrowGuruParam(GrowGuru.UpdateDto)
++ void deleteGrowGuru()
+}
+enum nl.growguru.app.models.plantspaces.SpaceMemberRole {
++  ADMIN
++  MEMBER
+}
+class nl.growguru.app.services.GrowGuruService {
+- GrowGuruRepository growGuruRepo
+- PasswordEncoder encoder
++ GrowGuru findByUserName(String)
++ GrowGuru findByEmail(String)
++ GrowGuru findById(UUID)
++ List<GrowGuru> findAllInSpace(Space)
++ UserDetails loadUserByUsername(String)
++ GrowGuru create(GrowGuru.RegisterDto)
++ void remove(GrowGuru)
++ GrowGuru update(GrowGuru.UpdateDto)
+- void updateUsernameIfPresent(GrowGuru.UpdateDto,GrowGuru)
+- void updateEmailIfPresent(GrowGuru.UpdateDto,GrowGuru)
+- void updatePasswordIfPresent(GrowGuru.UpdateDto,GrowGuru)
+- void updatePictureIfPresent(GrowGuru.UpdateDto,GrowGuru)
+}
+class nl.growguru.app.models.plantspaces.Plant {
+- UUID id
+- String name
+- String type
+- int streaks
+- LocalDateTime createdAt
+- LocalDateTime deadAt
+- LocalDateTime lastWateringDate
+- LocalDateTime wateringDate
+- byte wateringInterval
+- String potBaseSkin
+- String potTrimSkin
+- String accessory
+}
+class nl.growguru.app.models.plantspaces.Plant$PlantDto {
+- String name
+- String type
+- LocalDateTime wateringDate
+- byte wateringInterval
++ Plant toPlant()
+}
+enum nl.growguru.app.models.auth.GrowGurePremium {
++  PREMIUM_PLUS
++  PREMIUM
++  NONE
+}
+class nl.growguru.app.api.rest.SpaceController {
+- SpaceService spaceService
++ ResponseEntity<Space> getUserSpace(UUID)
++ ResponseEntity<Space> addSpace(Space.SpaceDto)
++ ResponseEntity<List<GrowGuru>> getMembersFromSpace(UUID)
++ ResponseEntity<List<Space>> getUserSpaces()
++ ResponseEntity<Space> addMemberToSpace(UUID,UUID)
++ ResponseEntity<Void> deleteSelectedSpace(UUID)
++ ResponseEntity<Void> removeMemberFromSelectedSpace(UUID,UUID)
+}
+class nl.growguru.app.exceptions.UnauthorizedException {
+}
+class nl.growguru.app.models.plantspaces.Space {
+- UUID id
+- String name
+- List<GrowGuru> members
+- List<GrowGuru> admins
+- boolean accessible
+- List<Plant> plants
+}
+class nl.growguru.app.models.plantspaces.Space$SpaceDto {
+- String name
+- List<GrowGuru> spaceMembers
+- List<Plant> plants
++ Space toSpace()
+}
+class nl.growguru.app.exceptions.ForbiddenResourceAccessed {
+}
+class nl.growguru.app.exceptions.BadRequest {
+}
+class nl.growguru.app.config.JWTFilter {
+- GrowGuruService growGuruService
+- JWTUtil jwtUtil
+# void doFilterInternal(HttpServletRequest,HttpServletResponse,FilterChain)
+}
+class nl.growguru.app.services.SpaceService {
+- SpaceRepository spaceRepository
+- GrowGuruRepository growGuruRepository
+- {static} String SPACE_NOT_FOUND
+- {static} String USER_NOT_FOUND
++ Space getSelectedSpace(UUID)
++ GrowGuru getCurrentValidGrowGuru()
++ Space createSpace(Space.SpaceDto)
++ Space addMemberToSpace(UUID,UUID)
++ void deleteSpace(UUID)
++ void removeMember(UUID,UUID)
+}
+class nl.growguru.app.utils.SecurityContextUtil {
++ {static} Authentication getAuth()
++ {static} GrowGuru getCurrentGrowGuru()
+}
+class nl.growguru.app.exceptions.ConflictException {
+}
+interface nl.growguru.app.repositories.PlantRepository {
+}
+interface nl.growguru.app.repositories.SpaceRepository {
+}
+class nl.growguru.app.utils.JWTUtil {
++ {static} String JWT_TOKEN_PREFACE
++ {static} long JWT_DURATION_MS
+- {static} Logger log
+- String issuer
+- String passPhrase
++ String generateTokenFor(GrowGuru)
++ boolean validate(String)
++ String getUsernameOf(String)
++ {static} Key getKey(String)
+- {static} Jws<Claims> parseToken(String,String)
++ {static} PasswordEncoder passwordEncoder()
+}
+
+
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.GrowGuruRepository
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.ResourceNotFound
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.PreConditionFailed
+nl.growguru.app.config.GlobalExceptionHandler +.. nl.growguru.app.config.GlobalExceptionHandler$ErrorResponse
+org.springframework.security.core.userdetails.UserDetails <|.. nl.growguru.app.models.auth.GrowGuru
+nl.growguru.app.models.auth.GrowGuru +.. nl.growguru.app.models.auth.GrowGuru$LoginDto
+nl.growguru.app.models.auth.GrowGuru +.. nl.growguru.app.models.auth.GrowGuru$RegisterDto
+nl.growguru.app.models.auth.LoginDto <|-- nl.growguru.app.models.auth.GrowGuru$RegisterDto
+nl.growguru.app.models.auth.GrowGuru +.. nl.growguru.app.models.auth.GrowGuru$UpdateDto
+org.springframework.security.core.userdetails.UserDetailsService <|.. nl.growguru.app.services.GrowGuruService
+nl.growguru.app.models.plantspaces.Plant +.. nl.growguru.app.models.plantspaces.Plant$PlantDto
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.UnauthorizedException
+nl.growguru.app.models.plantspaces.Space +.. nl.growguru.app.models.plantspaces.Space$SpaceDto
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.ForbiddenResourceAccessed
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.BadRequest
+org.springframework.web.filter.OncePerRequestFilter <|-- nl.growguru.app.config.JWTFilter
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.ConflictException
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.PlantRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.SpaceRepository
+@enduml

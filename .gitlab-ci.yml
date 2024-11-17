@@ -1,0 +1,7 @@
+stages:
+  - test
+  - package
+  - deploy
+
+include:
+  - local: 'workflows/main.yml'

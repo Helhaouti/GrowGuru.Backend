@@ -1,0 +1,515 @@
+@startuml
+class nl.growguru.app.config.JavaMailSenderConfig {
+- String userName
+- String password
++ JavaMailSender javaMailSender()
+}
+interface nl.growguru.app.repositories.GrowGuruRepository {
+~ Optional<GrowGuru> findByUsername(String)
+~ Optional<GrowGuru> findByEmail(String)
+~ List<GrowGuru> findAllMembersInSpace(Space)
+~ boolean existsByVerificationCode(String)
+~ Optional<GrowGuru> findUserByVerificationCode(String)
+}
+class nl.growguru.app.api.rest.WebhookController {
++ {static} String HOOK_API_BASE
+- {static} Logger log
+- ObjectMapper mapper
+- StripeService stripeService
+- String endpointSecret
++ ResponseEntity<String> handleStripeEvent(String,String)
+}
+class nl.growguru.app.config.ThymeleafConfig {
+~ ITemplateResolver thymeleafTemplateResolver()
+}
+class nl.growguru.app.api.rest.AuthenticateController {
++ {static} String AUTH_API_BASE
+- AuthenticationManager authManager
+- GrowGuruService growGuruService
+- JWTUtil jwtUtil
++ ResponseEntity<Map<String,String>> login(GrowGuru.LoginDto)
++ ResponseEntity<Map<String,String>> refresh(String)
++ ResponseEntity<Map<String,String>> register(GrowGuru.RegisterDto)
++ String verify(String)
+}
+class nl.growguru.app.services.PlantService {
+- PlantRepository plantRepository
+- SpaceRepository spaceRepository
+- SpaceService spaceService
+- {static} String PLANT_NOT_FOUND
+- {static} String PLANT_HAS_BEEN_WATERED
+- {static} int STREAK_INCREMENT
+- {static} int HOURS_A_DAY
+- {static} int MINIMUM_WATERING_INTERVAL
+- {static} double MARGIN_PERCENTAGE
++ Plant getPlantDetails(UUID)
++ Plant addPlant(Plant.PlantDto,UUID)
++ Plant moveToGraveyard(UUID)
++ String waterPlant(UUID)
+- boolean isOutsideMargins(LocalDateTime,int)
++ Plant updatePlantSkins(UUID,Plant.UpdatePlantSkinsDto)
+}
+enum nl.growguru.app.models.shop.Currency {
++  LEAFS
++  EUR
++ String toLowerCaseString()
+}
+enum nl.growguru.app.models.plantspaces.Type {
++  PLANT
++  CACTUS
++  PUMPKIN
+}
+class nl.growguru.app.exceptions.PreConditionFailed {
+}
+abstract class nl.growguru.app.models.notifications.Notification {
+# String message
+}
+class nl.growguru.app.api.rest.PurchaseRecordController {
+- PurchaseRecordService purchaseRecordService
++ List<PurchaseRecord> getAllRecords()
++ List<PurchaseRecord> getAllPurchaseRecordsPerUser()
++ PurchaseRecord findById(UUID)
++ List<PurchaseRecord> findByDate(LocalDateTime)
++ List<PurchaseRecord> findByProduct(UUID)
+}
+class nl.growguru.app.exceptions.EmailIncompleteException {
+}
+class nl.growguru.app.models.shop.PurchaseRecord {
+- UUID id
+- GrowGuru buyer
+- Product product
+- LocalDateTime purchased
+- Price price
+}
+class nl.growguru.app.config.SecurityConfig {
+- PasswordEncoder passwordEncoder
+- GrowGuruService growGuruService
+- JWTFilter tokenFilter
+- String activeProfile
++ SecurityFilterChain securityFilterChain(HttpSecurity)
++ AuthenticationManager authenticationManagerBean()
+}
+enum nl.growguru.app.models.plantspaces.PlantState {
++  ALIVE
++  DEAD
+}
+class nl.growguru.app.api.html.StripeLandingController {
++ {static} String SUCCESSFUL_STRIPE_PAYMENT_PAGE
++ String success()
+}
+class nl.growguru.app.config.GenericConfig {
++ {static} String EMAIL_REGEX
++ {static} String PASSWORD_REGEX
+- String frontendHostname
+- String backendHostname
+- String tzdbId
++ ZoneId getDefaultZoneId()
+}
+class nl.growguru.app.config.GlobalExceptionHandler {
+- {static} Logger logger
++ ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException,HttpServletRequest)
++ ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException,HttpServletRequest)
+- String extractDuplicateValue(String)
++ ResponseEntity<String> handleConflictException(Exception,HttpServletRequest)
++ ResponseEntity<String> handlePreconditionError(Exception,HttpServletRequest)
++ ResponseEntity<String> handleForbiddenResourceAccess(Exception,HttpServletRequest)
++ ResponseEntity<String> handleNotFound(Exception,HttpServletRequest)
++ ResponseEntity<String> handleUnauthorizedAcces(Exception,HttpServletRequest)
++ ResponseEntity<String> handleBadRequest(Exception,HttpServletRequest)
++ ResponseEntity<String> handleTooBrokeRequest(Exception,HttpServletRequest)
++ ResponseEntity<String> handleInternalServerError(Exception,HttpServletRequest)
+- ResponseEntity<String> buildErrorResponse(HttpServletRequest,HttpStatus,Throwable)
+- String getRequestURL(HttpServletRequest)
+- String getExceptionMessage(HttpServletRequest,HttpStatus,String)
+}
+interface nl.growguru.app.repositories.PurchaseRecordRepository {
+~ List<PurchaseRecord> findAllByGrowGuru(GrowGuru)
+~ List<Product> findAllProductsByGrowGuru(GrowGuru)
+~ List<PurchaseRecord> findAllByProduct(UUID)
+~ List<PurchaseRecord> findAllByDate(LocalDateTime)
+}
+class nl.growguru.app.models.shop.Product {
+- UUID id
+- LocalDate created
+- LocalDate updated
+- String name
+- Long leafs
+- Category category
+- Price price
+- byte[] image
+- String color
+- boolean standard
++ boolean equals(Object)
++ int hashCode()
+}
+class nl.growguru.app.models.auth.GrowGuru {
+- UUID id
+- String username
+- String email
+- byte[] picture
+- String password
+- String verificationCode
+- LocalDateTime createdAt
+- LocalDateTime changedAt
+- Set<Space> spaces
+- Set<Space> adminSpaces
+- long currency
+- long experience
+- boolean enabled
+- List<PurchaseRecord> purchases
+- GrowGurePremium premium
++ Set<Space> getAllSpaces()
++ Collection<? extends GrantedAuthority> getAuthorities()
++ boolean isAccountNonExpired()
++ boolean isAccountNonLocked()
++ boolean isCredentialsNonExpired()
++ boolean equals(Object)
++ int hashCode()
+}
+class nl.growguru.app.models.auth.GrowGuru$LoginDto {
+~ String username
+~ String password
++ UsernamePasswordAuthenticationToken toAuthToken()
+}
+class nl.growguru.app.models.auth.GrowGuru$RegisterDto {
+- String email
++ GrowGuru toGrowGuru(PasswordEncoder,String)
+}
+class nl.growguru.app.models.auth.GrowGuru$UpdateDto {
+- String email
+- String password
+- String username
+- byte[] picture
+}
+class nl.growguru.app.services.StripeService {
+- Logger log
+- StripeSessionTrackerRepository trackerRepository
+- PurchaseRecordService purchaseService
+- String apiKey
++ void init()
++ ResponseEntity<Void> createCheckoutSession(Product,GrowGuru)
++ void processSessionCompletion(String)
+}
+class nl.growguru.app.responses.SpaceResponse {
+- UUID id
+- String name
+- Collection<String> memberNames
+- Collection<String> adminNames
+- Collection<Plant> plants
+}
+class nl.growguru.app.views.GrowGuruViews {
+}
+interface nl.growguru.app.views.GrowGuruViews$SpaceFilter {
+}
+interface nl.growguru.app.views.GrowGuruViews$SpaceMemberFilter {
+}
+interface nl.growguru.app.views.GrowGuruViews$PurchaseRecordFilter {
+}
+interface nl.growguru.app.views.GrowGuruViews$UserViewFilter {
+}
+class nl.growguru.app.services.GrowGuruService {
+- GrowGuruRepository growGuruRepo
+- PasswordEncoder encoder
+- ProductRepository productRepository
+- StripeSessionTrackerRepository trackerRepository
+- SpaceRepository spaceRepository
+- SpaceService spaceService
+- ProductService productService
+- MailService mailService
++ GrowGuru findByUserName(String)
++ GrowGuru findByEmail(String)
++ GrowGuru findById(UUID)
++ List<GrowGuru> findAllInSpace(Space)
++ UserDetails loadUserByUsername(String)
++ GrowGuru create(GrowGuru.RegisterDto)
++ String verify(String)
++ void remove(GrowGuru)
++ GrowGuru update(GrowGuru.UpdateDto)
+- void updateUsernameIfPresent(GrowGuru.UpdateDto,GrowGuru)
+- void updateEmailIfPresent(GrowGuru.UpdateDto,GrowGuru)
+- void updatePasswordIfPresent(GrowGuru.UpdateDto,GrowGuru)
+- void updatePictureIfPresent(GrowGuru.UpdateDto,GrowGuru)
+- String generateVerificationCode()
+}
+interface nl.growguru.app.repositories.ProductRepository {
+~ Optional<Product> findByName(String)
+~ List<Product> findAllWithSameCategory(Category)
+~ List<Product> findAllDefaultProducts()
+~ List<Product> findAllExcludingOwned(List<UUID>)
+}
+class nl.growguru.app.api.rest.SpaceController {
+- SpaceService spaceService
++ List<SpaceResponse> getUserSpaces()
++ Space getUserSpace(UUID)
++ Space addSpace(Space.CreateSpaceDto)
++ Space updateSpace(UUID,Space.UpdateSpaceDto)
++ void deleteSpace(UUID)
++ Set<GrowGuru> getMembers(UUID)
++ Space addMember(UUID,String)
++ void removeMember(UUID,String)
+}
+class nl.growguru.app.models.plantspaces.Space {
+- UUID id
+- String name
+- Set<GrowGuru> members
+- Set<GrowGuru> admins
+- Set<Plant> plants
++ Set<GrowGuru> getAllMembers()
++ boolean equals(Object)
++ int hashCode()
+}
+class nl.growguru.app.models.plantspaces.Space$CreateSpaceDto {
+- String name
+- Set<String> memberUsernames
+- Set<String> adminUsernames
++ Space toSpace(Function<String,Optional<GrowGuru>>)
+}
+class nl.growguru.app.models.plantspaces.Space$UpdateSpaceDto {
+- String name
+}
+class nl.growguru.app.exceptions.BadRequest {
+}
+class nl.growguru.app.exceptions.ConflictException {
+}
+interface nl.growguru.app.repositories.PlantRepository {
+}
+class nl.growguru.app.utils.JWTUtil {
++ {static} long JWT_ACCESS_DURATION_MS
++ {static} long JWT_REFRESH_DURATION_MS
++ {static} String JWT_TOKEN_PREFACE
+- {static} String JWT_CLAIM_KEY_USER_ID
+- {static} String JWT_CLAIM_KEY_USERNAME
+- {static} String JWT_CLAIM_KEY_EMAIL
+- {static} Logger log
+- String issuer
+- String passPhrase
++ Map<String,String> generateTokensFor(GrowGuru)
+- String generateAccessTokenFor(GrowGuru)
+- String generateRefreshTokenFor(GrowGuru)
++ boolean validate(String)
++ String getUsernameOf(String)
++ boolean isRefreshToken(String)
++ {static} Key getKey(String)
+- {static} Jws<Claims> parseToken(String,String)
++ {static} PasswordEncoder passwordEncoder()
+}
+class nl.growguru.app.services.PurchaseRecordService {
+- PurchaseRecordRepository purchaseRecordRepository
+- GrowGuruRepository growGuruRepository
+- MailService mailService
++ List<PurchaseRecord> findAll()
++ PurchaseRecord findById(UUID)
++ List<PurchaseRecord> findByDate(LocalDateTime)
++ List<PurchaseRecord> findAllByGrowGuru(GrowGuru)
++ List<PurchaseRecord> findAllByProduct(UUID)
++ void processProductPurchase(Product,GrowGuru,Price)
+}
+class nl.growguru.app.GrowGuruApplication {
++ {static} void main(String[])
+}
+class nl.growguru.app.exceptions.ResourceNotFound {
+}
+class nl.growguru.app.utils.EnvUtil {
++ {static} String getBaseUrl()
+}
+class nl.growguru.app.api.rest.PlantController {
+- PlantService plantService
+- SpaceService spaceService
++ ResponseEntity<Plant> getPlantDetails(UUID)
++ ResponseEntity<Plant> addPlants(Plant.PlantDto,UUID)
++ ResponseEntity<Plant> moveToGraveyard(UUID)
++ ResponseEntity<Collection<Plant>> getAllPlantsFromSpace(UUID)
++ ResponseEntity<String> waterPlant(UUID)
++ ResponseEntity<Plant> updatePlantSkins(UUID,Plant.UpdatePlantSkinsDto)
+}
+class nl.growguru.app.services.ProductService {
+- ProductRepository productRepository
+- PurchaseRecordRepository purchaseRecordRepository
+- StripeService stripeService
+- PurchaseRecordService purchaseService
++ List<Product> findAll()
++ List<Product> findAllExcludingOwned()
++ List<Product> findAllOwnedByUser(GrowGuru)
++ Product findById(UUID)
++ Product findByName(String)
++ List<Product> findAllWithSameCategory(Category)
++ ResponseEntity<Void> buyProduct(UUID)
++ ResponseEntity<Void> buyProduct(UUID,GrowGuru)
+- ResponseEntity<Void> buyProductWithLeafs(Product,GrowGuru)
++ Product create(Product)
++ void remove(UUID)
+}
+class nl.growguru.app.models.shop.StripeSessionTracker {
+- UUID id
+- String sessionId
+- String paymentLink
+- Product product
+- GrowGuru growGuru
+}
+class nl.growguru.app.models.plantspaces.PlantCustomization {
+- UUID id
+- UUID potBaseSkinId
+- UUID potTrimSkinId
+- UUID accessoryId
+- UUID tableDecorationId
+}
+class nl.growguru.app.models.email.Attachment {
+- String name
+- File file
++ boolean isComplete()
+}
+class nl.growguru.app.api.rest.GrowGuruController {
+- GrowGuruService growGuruService
+- JWTUtil jwtUtil
++ GrowGuru getGrowGuru()
++ List<GrowGuru> getAllGrowGurusInSpace(Space)
++ GrowGuru findById(UUID)
++ GrowGuru findByEmail(String)
++ GrowGuru findByUsername(String)
++ ResponseEntity<Map<String,String>> updateGrowGuruParam(GrowGuru.UpdateDto)
++ void deleteGrowGuru()
+}
+interface nl.growguru.app.repositories.StripeSessionTrackerRepository {
+~ StripeSessionTracker findBySessionId(String)
+~ void deleteSessionsByGrowGuruId(UUID)
+}
+enum nl.growguru.app.models.shop.Category {
++  ACCESSORIES
++  BASE_COLORS
++  TRIM_COLORS
++  TABLE_DECOR
++  AVATAR
++  CURRENCY
+}
+class nl.growguru.app.models.plantspaces.Plant {
+- UUID id
+- String name
+- Type type
+- PlantState plantState
+- int streaks
+- LocalDateTime createdAt
+- LocalDateTime deadAt
+- LocalDateTime lastWateringDate
+- LocalDateTime wateringDate
+- byte wateringInterval
+- PlantCustomization plantCustomization
++ boolean equals(Object)
++ int hashCode()
+}
+class nl.growguru.app.models.plantspaces.Plant$PlantDto {
+- String name
+- Type type
+- byte wateringInterval
+- PlantCustomization plantCustomization
++ Plant toPlant()
+}
+class nl.growguru.app.models.plantspaces.Plant$UpdatePlantSkinsDto {
+- PlantCustomization plantCustomization
+}
+enum nl.growguru.app.models.auth.GrowGurePremium {
++  PREMIUM_PLUS
++  PREMIUM
++  NONE
+}
+class nl.growguru.app.exceptions.TooBrokeException {
+}
+class nl.growguru.app.exceptions.UnauthorizedException {
+}
+class nl.growguru.app.api.rest.ProductController {
+- ProductService productService
++ List<Product> getAllProducts()
++ List<Product> getAllAvailable()
++ List<Product> getAllProductsOwnedByUser()
++ Product findById(UUID)
++ Product findByName(String)
++ List<Product> findByCategory(Category)
++ ResponseEntity<Void> buyProduct(UUID)
+}
+class nl.growguru.app.exceptions.ForbiddenResourceAccessed {
+}
+class nl.growguru.app.config.JWTFilter {
+- GrowGuruService growGuruService
+- JWTUtil jwtUtil
+# void doFilterInternal(HttpServletRequest,HttpServletResponse,FilterChain)
+}
+class nl.growguru.app.models.email.Email {
+- String sender
+- String receiver
+- String subject
+- String content
+- Collection<Attachment> attachments
++ boolean isComplete()
+}
+class nl.growguru.app.models.email.Email$EmailDto {
+- String sender
+- String receiver
+- String subject
+- String content
++ Email toMail()
+}
+class nl.growguru.app.services.SpaceService {
+- SpaceRepository spaceRepository
+- GrowGuruRepository growGuruRepository
+- {static} String SPACE_NOT_FOUND
+- {static} String USER_NOT_FOUND
+- {static} String DUPLICATE_MEMBER_MESSAGE
++ Space getSelectedSpace(UUID)
++ List<SpaceResponse> getUserSpaces()
++ Space createSpace(Space.CreateSpaceDto)
++ Space addMemberToSpace(UUID,String)
++ void deleteSpace(UUID)
++ void removeMember(UUID,String)
++ Space updateSpace(UUID,Space.UpdateSpaceDto)
+}
+class nl.growguru.app.utils.SecurityContextUtil {
++ {static} Authentication getAuth()
++ {static} GrowGuru getCurrentGrowGuru()
++ {static} GrowGuru getCurrentGrowGuru(boolean)
+}
+class nl.growguru.app.models.shop.Price {
+- double amount
+- Currency currency
+}
+class nl.growguru.app.services.MailService {
+- JavaMailSender javaMailSender
+- TemplateEngine templateEngine
+- String defaultSender
++ void sendPurchaseReceipt(PurchaseRecord)
++ void sendVerificationMail(String,String,String)
+- void sendEmail(Email)
+}
+interface nl.growguru.app.repositories.SpaceRepository {
+}
+
+
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.GrowGuruRepository
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.PreConditionFailed
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.EmailIncompleteException
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.PurchaseRecordRepository
+org.springframework.security.core.userdetails.UserDetails <|.. nl.growguru.app.models.auth.GrowGuru
+nl.growguru.app.models.auth.GrowGuru +.. nl.growguru.app.models.auth.GrowGuru$LoginDto
+nl.growguru.app.models.auth.GrowGuru +.. nl.growguru.app.models.auth.GrowGuru$RegisterDto
+nl.growguru.app.models.auth.LoginDto <|-- nl.growguru.app.models.auth.GrowGuru$RegisterDto
+nl.growguru.app.models.auth.GrowGuru +.. nl.growguru.app.models.auth.GrowGuru$UpdateDto
+nl.growguru.app.views.GrowGuruViews +.. nl.growguru.app.views.GrowGuruViews$SpaceFilter
+nl.growguru.app.views.GrowGuruViews +.. nl.growguru.app.views.GrowGuruViews$SpaceMemberFilter
+nl.growguru.app.views.GrowGuruViews +.. nl.growguru.app.views.GrowGuruViews$PurchaseRecordFilter
+nl.growguru.app.views.GrowGuruViews +.. nl.growguru.app.views.GrowGuruViews$UserViewFilter
+org.springframework.security.core.userdetails.UserDetailsService <|.. nl.growguru.app.services.GrowGuruService
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.ProductRepository
+nl.growguru.app.models.plantspaces.Space +.. nl.growguru.app.models.plantspaces.Space$CreateSpaceDto
+nl.growguru.app.models.plantspaces.Space +.. nl.growguru.app.models.plantspaces.Space$UpdateSpaceDto
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.BadRequest
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.ConflictException
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.PlantRepository
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.ResourceNotFound
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.StripeSessionTrackerRepository
+nl.growguru.app.models.plantspaces.Plant +.. nl.growguru.app.models.plantspaces.Plant$PlantDto
+nl.growguru.app.models.plantspaces.Plant +.. nl.growguru.app.models.plantspaces.Plant$UpdatePlantSkinsDto
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.TooBrokeException
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.UnauthorizedException
+nl.growguru.app.exceptions.RuntimeException <|-- nl.growguru.app.exceptions.ForbiddenResourceAccessed
+org.springframework.web.filter.OncePerRequestFilter <|-- nl.growguru.app.config.JWTFilter
+nl.growguru.app.models.email.Email +.. nl.growguru.app.models.email.Email$EmailDto
+org.springframework.data.jpa.repository.JpaRepository <|-- nl.growguru.app.repositories.SpaceRepository
+@enduml

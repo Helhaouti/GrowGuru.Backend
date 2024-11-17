@@ -1,0 +1,44 @@
+variables:
+  IMAGE_ID_ACC: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}-be-acc
+  DEVELOPMENT_BRANCH: development
+
+acc-package:
+  stage: package
+  environment:
+    name: acceptance
+    url: https://acc.yaeldevries.nl/
+  tags:
+    - hva
+  image: docker:latest
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == $DEVELOPMENT_BRANCH'
+  script:
+    - >
+      docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+      
+      docker build --build-arg "APP_PROFILE_ARG=acc" --build-arg "SERVER_PORT_ARG=8081" -t ${IMAGE_ID_ACC} -f Dockerfile .
+      
+      docker push ${IMAGE_ID_ACC}
+
+acc-deploy:
+  stage: deploy
+  environment:
+    name: acceptance
+    url: https://acc.yaeldevries.nl/
+  tags:
+    - hva
+  image: alpine:latest
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == $DEVELOPMENT_BRANCH'
+  before_script:
+    - 'command -v sshpass >/dev/null || ( apk add --update openssh sshpass )'
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $SSH_HOST_URL >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - sshpass -p "$SSH_PASSWORD" ssh $SSH_OPTIONS $SSH_USER@$SSH_HOST_URL "
+      echo $SSH_PASSWORD | sudo -S docker stop clover-acc-be || true &&
+      echo $SSH_PASSWORD | sudo -S docker rm clover-acc-be || true &&
+      echo $SSH_PASSWORD | sudo -S docker image prune -a -f &&
+      echo $SSH_PASSWORD | sudo -S docker run --name clover-acc-be --network host -d --env-file /home/GrowGuruAdmin/environment/acc/clover-be.env --restart unless-stopped $IMAGE_ID_ACC"

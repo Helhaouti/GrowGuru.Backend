@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Email Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background: #1ea320;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Welcome to The GrowGuru Family</h2>
+    <p>Dear <span th:text="${name}"></span>,</p>
+
+    <p>We're excited to have you on board. Before you get started, we need to verify your email address.</p>
+    <p><a th:href="${url}" class="button">Verify My Email</a></p>
+    <p>If you did not sign up for GrowGuru, please disregard this email.</p>
+    <p>Thank you for choosing GrowGuru.</p>
+    <div class="footer">
+        <p>Warm regards,</p>
+        <p>The GrowGuru Family</p>
+    </div>
+</div>
+</body>
+</html>
